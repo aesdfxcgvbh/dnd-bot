@@ -80,7 +80,7 @@ async def timed_status():
         status = random.choice(statuses)
         activity = discord.Activity(type=discord.ActivityType.custom, state=status)
         await bot.change_presence(activity = activity)
-        await asyncio.sleep(30, result=f'chainging status to "{status}"')
+        await asyncio.sleep(30, result=f'changing status to "{status}"')
     
 
 async def invite(ctx, user, party_name, text):        #makes an embed and sends an invite. True if user resonse is "Принять", False otherwise
