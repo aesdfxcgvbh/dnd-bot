@@ -405,9 +405,9 @@ async def delete_party(
 			cursor.execute(f"DELETE FROM parties WHERE name = '{party_name}'")
 			await ctx.respond(f"Группа `{party_name}` была удалена.")
 		else:
-			ctx.respond("Вы не являетесь организатором данной группы.")
+			await ctx.respond("Вы не являетесь организатором данной группы.")
 	except TypeError:
-		ctx.respond("Этой группы не существует.")
+		await ctx.respond("Этой группы не существует.")
 
 @bot.application_command(name="просмотреть")
 async def list(
