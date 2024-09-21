@@ -26,7 +26,7 @@ bot = discord.Bot(intents = intents)
 bot.auto_sync_commands = False
 activity = discord.Activity(type = discord.ActivityType.custom, state = "test state")
 
-dm_role_id = 1228669278945935472
+dm_role_id = 1283712029198254090
 
 ## Взаимодействие с SQL.
 
@@ -269,7 +269,7 @@ async def kick_party_member(guild, member, party_name = None):
 @bot.event
 async def on_ready():
 	if not bot.auto_sync_commands: # Этот блок необходим для дебаггинга. ID гильдии ниже поменять на свой тестовый сервер, bot.auto_sync_commands переключить на False.
-		await bot.sync_commands(guild_ids = [1127574931970981898])
+		await bot.sync_commands(guild_ids = [787280396915048498])
 	print(f"Подключённые команды: {', '.join(command.name for command in bot.commands)}.")
 	print(random_answer(dict = reports, key = "bot_online").format(bot = bot.user, time = datetime.datetime.now().strftime('%H:%M:%S')))
 	print(f"bot_status: {bot.status}")
@@ -299,7 +299,7 @@ async def create_party(ctx,
 	if party_name not in [party[0] for party in cursor.execute(f"SELECT name FROM parties").fetchall()]:
 		role = await ctx.guild.create_role(name = party_name)
 		await role.edit(colour = discord.Colour.random())
-		category = await ctx.guild.create_category(name = category_name, position = 0)
+		category = await ctx.guild.create_category(name = category_name, position = 3)
 		await category.set_permissions(
 			target = ctx.author,
 			view_channel = True,
@@ -388,20 +388,26 @@ async def delete_party(
 			)):
 	"""Функция удаления группы."""
 	await ctx.defer()
-	if is_party_owner(ctx, party_name = party_name):
-		await ctx.guild.get_role(int(cursor.execute(f"SELECT role_id FROM parties WHERE name = '{party_name}'").fetchone()[0])).delete()
-		await discord.utils.get(ctx.guild.categories, id = cursor.execute(f"SELECT category_id FROM parties WHERE name = '{party_name}'").fetchone()[0]).set_permissions(
-			target = ctx.author, 
-			overwrite = None
-			)
-		await discord.utils.get(ctx.guild.categories, id = cursor.execute(f"SELECT category_id FROM parties WHERE name = '{party_name}'").fetchone()[0]).set_permissions(
-			target = ctx.guild.default_role,
-			view_channel = False
-			)
-		cursor.execute(f"DELETE FROM parties WHERE name = '{party_name}'")
-		await ctx.respond(f"Группа `{party_name}` была удалена.")
-	else:
-		ctx.respond("Вы не являетесь организатором данной группы.")
+	try:
+		if is_party_owner(ctx, party_name = party_name):
+			try:
+				await ctx.guild.get_role(int(cursor.execute(f"SELECT role_id FROM parties WHERE name = '{party_name}'").fetchone()[0])).delete()
+				await discord.utils.get(ctx.guild.categories, id = cursor.execute(f"SELECT category_id FROM parties WHERE name = '{party_name}'").fetchone()[0]).set_permissions(
+					target = ctx.author, 
+					overwrite = None
+					)
+				await discord.utils.get(ctx.guild.categories, id = cursor.execute(f"SELECT category_id FROM parties WHERE name = '{party_name}'").fetchone()[0]).set_permissions(
+					target = ctx.guild.default_role,
+					view_channel = False
+					)
+			except:
+				pass
+			cursor.execute(f"DELETE FROM parties WHERE name = '{party_name}'")
+			await ctx.respond(f"Группа `{party_name}` была удалена.")
+		else:
+			ctx.respond("Вы не являетесь организатором данной группы.")
+	except TypeError:
+		ctx.respond("Этой группы не существует.")
 
 @bot.application_command(name="просмотреть")
 async def list(
