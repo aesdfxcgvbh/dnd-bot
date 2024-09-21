@@ -124,6 +124,7 @@ def is_party_member(ctx, member, party_name):
 
 async def change_dm(ctx, member, party_name):
 	"""Функция смены организатора группы. Использует функцию request() для подтвереждения согласия."""
+	await ctx.defer()
 	if await request(
 		ctx,
 		member = member,
@@ -153,6 +154,7 @@ async def change_dm(ctx, member, party_name):
 
 async def invite_to_party(ctx, member, party_name):
 	"""Функция добавления участника группы. Использует функцию request() для подтвереждения согласия."""
+	await ctx.defer()
 	if await request(
 		ctx,
 		member = member,
@@ -195,6 +197,7 @@ class requestView(discord.ui.View):
 
 async def request(ctx, member, party_name, text):
 	"""Функция проверки согласия пользователя на то или иное действие."""
+	await ctx.defer()
 	if ctx.author.id == member.id:
 		await ctx.respond("Вы не можете взаимодействовать сами с собой.")
 		return False
@@ -292,6 +295,7 @@ async def create_party(ctx,
 			required = True
 			)):
 	"""Функция создания группы."""
+	await ctx.defer()
 	if party_name not in [party[0] for party in cursor.execute(f"SELECT name FROM parties").fetchall()]:
 		role = await ctx.guild.create_role(name = party_name)
 		await role.edit(colour = discord.Colour.random())
@@ -320,6 +324,7 @@ async def create_party(ctx,
 
 @create_party.error
 async def create_party_error(ctx, error):
+	await ctx.defer()
 	if type(error) is discord.errors.CheckFailure:
 		await ctx.respond("У вас недостаточно прав для создания группы.")
 	else:
@@ -347,6 +352,7 @@ async def manage_party(
 			required = True
 			)):
 	"""Функция изменения тех или иных параметров группы."""
+	await ctx.defer()
 	if is_party_owner(ctx, party_name = party_name):
 		if action == "передать права организатора":
 			await change_dm(ctx, member = target, party_name = party_name)
@@ -365,6 +371,7 @@ async def manage_party(
 
 @manage_party.error
 async def manage_party_error(ctx, error):
+	await ctx.defer()
 	if type(error) is TypeError:
 		await ctx.respond("Такой группы не существует.")
 	else:
@@ -379,6 +386,8 @@ async def delete_party(
 			description = "То уникальное название, что вы вводили при создании группы.",
 			required = True
 			)):
+	"""Функция удаления группы."""
+	await ctx.defer()
 	if is_party_owner(ctx, party_name = party_name):
 		await ctx.guild.get_role(int(cursor.execute(f"SELECT role_id FROM parties WHERE name = '{party_name}'").fetchone()[0])).delete()
 		await discord.utils.get(ctx.guild.categories, id = cursor.execute(f"SELECT category_id FROM parties WHERE name = '{party_name}'").fetchone()[0]).set_permissions(
@@ -411,6 +420,7 @@ async def list(
 		required = False
 		)):
 	"""Функция просмотра списка тех или иных параметров."""
+	await ctx.defer()
 	if option == "список групп":
 		await ctx.respond(f"Список активных групп: {', '.join([party[0] for party in cursor.execute(f'SELECT name FROM parties').fetchall()])}")
 	elif option == "информация о группе":
