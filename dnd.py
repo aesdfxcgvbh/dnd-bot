@@ -440,9 +440,9 @@ async def list(
 				text = ""
 				for member in members:
 					text += f"<@!{member}>, "
-				await ctx.respond(f"DM: {await bot.get_or_fetch_user(int(dm))}.\nИгроки: {text[:-2]}.") 
+				await ctx.respond(f"Организатор: {await bot.get_or_fetch_user(int(dm))}.\nУчастники: {text[:-2]}.") 
 			else:
-				await ctx.respond(f"DM: {await bot.get_or_fetch_user(int(dm))}.\nИгроки: отсутствуют.") 
+				await ctx.respond(f"Организатор: {await bot.get_or_fetch_user(int(dm))}.\nУчастники: отсутствуют.") 
 
 @bot.event
 async def on_member_remove(member):
