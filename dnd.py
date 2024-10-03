@@ -154,7 +154,6 @@ async def change_dm(ctx, member, party_name):
 
 async def invite_to_party(ctx, member, party_name):
 	"""Функция добавления участника группы. Использует функцию request() для подтвереждения согласия."""
-	await ctx.defer()
 	if await request(
 		ctx,
 		member = member,
@@ -197,7 +196,6 @@ class requestView(discord.ui.View):
 
 async def request(ctx, member, party_name, text):
 	"""Функция проверки согласия пользователя на то или иное действие."""
-	await ctx.defer()
 	if ctx.author.id == member.id:
 		await ctx.respond("Вы не можете взаимодействовать сами с собой.")
 		return False
@@ -403,6 +401,8 @@ async def delete_party(
 			except:
 				pass
 			cursor.execute(f"DELETE FROM parties WHERE name = '{party_name}'")
+			connection.commit()
+
 			await ctx.respond(f"Группа `{party_name}` была удалена.")
 		else:
 			await ctx.respond("Вы не являетесь организатором данной группы.")
@@ -426,7 +426,7 @@ async def list(
 		required = False
 		)):
 	"""Функция просмотра списка тех или иных параметров."""
-	await ctx.defer()
+	await ctx.defer(ephemeral = True)
 	if option == "список групп":
 		await ctx.respond(f"Список активных групп: {', '.join([party[0] for party in cursor.execute(f'SELECT name FROM parties').fetchall()])}")
 	elif option == "информация о группе":
@@ -434,10 +434,12 @@ async def list(
 			await ctx.respond(random_answer(dict = reports, key = "unexpected_error").format(error = "Хаха! Попался, педик! Я же говорил, что поле \"party_name\" обязательно для опции \"player-list\"!"))
 		else:
 			dm = cursor.execute(f"SELECT dm_id FROM parties WHERE name = '{party_name}'").fetchone()[0]
-			members = [member[0] for member in cursor.execute(f"SELECT members FROM parties").fetchall()]
+			members = cursor.execute(f"SELECT members FROM parties WHERE name = '{party_name}'").fetchone()[0].split(', ')
 			if not (members[0] == ""):
-				members = ", ".join([await bot.get_or_fetch_user(int(member)) for member in members])
-				await ctx.respond(f"DM: {await bot.get_or_fetch_user(int(dm))}.\nИгроки: {members}") 
+				text = ""
+				for member in members:
+					text += f"<@!{member}>, "
+				await ctx.respond(f"DM: {await bot.get_or_fetch_user(int(dm))}.\nИгроки: {text[:-2]}.") 
 			else:
 				await ctx.respond(f"DM: {await bot.get_or_fetch_user(int(dm))}.\nИгроки: отсутствуют.") 
 
