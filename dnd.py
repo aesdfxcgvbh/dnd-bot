@@ -177,6 +177,7 @@ class requestView(discord.ui.View):
 	def __init__(self):
 		super().__init__()
 		self.value = None
+		self.timeout = None
 		
 	@discord.ui.button(label = "Принять",
 					   style = discord.ButtonStyle.green)
