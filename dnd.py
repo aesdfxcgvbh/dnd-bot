@@ -27,6 +27,7 @@ bot.auto_sync_commands = False
 activity = discord.Activity(type = discord.ActivityType.custom, state = "test state")
 
 dm_role_id = 1283712029198254090
+server_id = 787280396915048498
 
 ## Взаимодействие с SQL.
 
@@ -268,7 +269,7 @@ async def kick_party_member(guild, member, party_name = None):
 @bot.event
 async def on_ready():
 	if not bot.auto_sync_commands: # Этот блок необходим для дебаггинга. ID гильдии ниже поменять на свой тестовый сервер, bot.auto_sync_commands переключить на False.
-		await bot.sync_commands(guild_ids = [787280396915048498])
+		await bot.sync_commands(guild_ids = [server_id])
 	print(f"Подключённые команды: {', '.join(command.name for command in bot.commands)}.")
 	print(random_answer(dict = reports, key = "bot_online").format(bot = bot.user, time = datetime.datetime.now().strftime('%H:%M:%S')))
 	print(f"bot_status: {bot.status}")
