@@ -9,6 +9,7 @@
 	6. Используем snake_case, никаких верблюдов.
 
 """
+#test
 
 import random
 import asyncio
