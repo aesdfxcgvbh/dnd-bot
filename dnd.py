@@ -297,7 +297,7 @@ async def create_party(ctx,
 	"""Функция создания группы."""
 	await ctx.defer()
 	if party_name not in [party[0] for party in cursor.execute(f"SELECT name FROM parties").fetchall()]:
-		role = await ctx.guild.create_role(name = f'Жетон "{party_name}"')
+		role = await ctx.guild.create_role(name = f'Жетон "{party_name.capitalize()}"')
 		await role.edit(colour = discord.Colour.random())
 		category = await ctx.guild.create_category(name = category_name, position = 3)
 		await category.set_permissions(
