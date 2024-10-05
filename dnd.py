@@ -29,7 +29,7 @@ activity = discord.Activity(type = discord.ActivityType.custom, state = "test st
 dm_role_id = 1283712029198254090
 server_id = 787280396915048498
 
-log_channel = 960229690696667249    #Может быть None (смотреть log())
+log_channel = 1129758742448185364    #Может быть None (смотреть log())
 
 ## Взаимодействие с SQL.
 
