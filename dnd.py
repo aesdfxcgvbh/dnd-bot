@@ -299,7 +299,6 @@ async def kick_party_member(guild, member, party_name = None):
 			except discord.errors.NotFound:
 				pass
 			
-			await log("party_changed", action = "Участник исключён", member = member, party = party_name)
 			return True
 		else:
 			return False
@@ -406,6 +405,7 @@ async def manage_party(
 				await ctx.respond(f"{target} не является участником группы `{party_name}`.")
 			else:
 				await ctx.respond(f"{target} удалён из группы `{party_name}`")
+				await log("party_changed", action = "Участник исключён", member = member, party = party_name)
 	else:
 		await ctx.respond("Вы не являетесь организатором данной группы.")
 
@@ -500,9 +500,9 @@ async def quit_party(
 	if is_party_member(ctx, ctx.author, party_name):
 		await kick_party_member(ctx.guild, ctx.author, party_name)
 		await ctx.respond("Сделано, вы вышли из данной группы.")
-		log("user_left", member = ctx.author, party = party_name)
+		await log("user_left", member = ctx.author, party = party_name)
 	else:
-		await ctx.respond("Вы не состоите в данной группе.")
+		await ctx.respond("Вы не состоите в данной группе.")ф
 
 @bot.event
 async def on_member_remove(member):
