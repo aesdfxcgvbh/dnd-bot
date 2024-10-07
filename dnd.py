@@ -118,7 +118,6 @@ async def timed_status():
 async def log(event, **kwargs):
 	"""Отправляет отчёт о вызове команд, смене статуса и включении бота в определённый дискорд-канал (log_channel) и в консоль. event — ключ из словаря reports, а **kwargs — аргументы для format(). "{0}" в строках из reports заменяется на "**" в дискорде."""
 	console_kwargs = kwargs.copy()
-	discord_kwargs = kwargs.copy()
 	for key, value in console_kwargs.items():
 		
 		if isinstance(value, discord.Member):
@@ -126,6 +125,7 @@ async def log(event, **kwargs):
 	print(str("{0}[" + datetime.datetime.now().strftime('%H:%M:%S') + "]{0} " + reports[event].format('{1}', **console_kwargs)).format("", ""))
 	
 	if log_channel is not None:
+		discord_kwargs = kwargs.copy()
 		
 		for key, value in discord_kwargs.items():
 			if isinstance(value, discord.Member) or isinstance(value, discord.Role):
