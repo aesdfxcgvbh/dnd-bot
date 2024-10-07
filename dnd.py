@@ -119,7 +119,7 @@ def is_party_owner(ctx, party_name):
 		
 def is_party_member(ctx, member, party_name):
 	"""Функция проверки, является ли пользователь участником указанной группы."""
-	return member in cursor.execute(f"SELECT members FROM parties WHERE name = '{party_name}'").fetchone()[0].split(", ")
+	return str(member.id) in cursor.execute(f"SELECT members FROM parties WHERE name = '{party_name}'").fetchone()[0].split(", ")
 
 ## Функции категории manage_party.
 
