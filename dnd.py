@@ -85,7 +85,7 @@ reports = {"bot_online": "{0}{bot} был запущен.{0}",
 	   "party_changed": "{0}{action}{0}. Участник: {member}, группа: {0}{party}{0}.",
 	   "party_removed": "Группа {0}{party}{0} удалена пользователем {owner}.",
 	   "status_changed": 'Статус изменён на "{status}"',
-	   "user_left": "{member} вышел из группы {0}{party}{0}
+	   "user_left": "{member} вышел из группы {0}{party}{0}"
 	  }
 responds = {"bot_online": ["{bot} был запущен {time}."
 						  ],
