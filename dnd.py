@@ -80,12 +80,12 @@ statuses = ["Веди себя как заклинатель, колдунишк
 			"Бум, критическое попадание!"
 			]
 reports = {"bot_online": "{0}{bot} был запущен.{0}",
-"party_created": "{0}Группа создана{0}. Название: {0}{party}{0}, категория: {0}{category}{0}, роль: {role}, организатор: {owner}.",
-"invite": "{0}{action}{0}. Тип: {0}{type}{0}, отправитель: {sender}, получатель: {recipient}, группа: {0}{party}{0}.",
-"party_changed": "{0}{action}{0}. Участник: {member}, группа: {0}{party}{0}.",
-"party_removed": "Группа {0}{party}{0} удалена пользователем {owner}.",
-"status_changed": 'Статус изменён на "{status}"'
-}
+	   "party_created": "{0}Группа создана{0}. Название: {0}{party}{0}, категория: {0}{category}{0}, роль: {role}, организатор: {owner}.",
+	   "invite": "{0}{action}{0}. Тип: {0}{type}{0}, отправитель: {sender}, получатель: {recipient}, группа: {0}{party}{0}.",
+	   "party_changed": "{0}{action}{0}. Участник: {member}, группа: {0}{party}{0}.",
+	   "party_removed": "Группа {0}{party}{0} удалена пользователем {owner}.",
+	   "status_changed": 'Статус изменён на "{status}"'
+	  }
 responds = {"bot_online": ["{bot} был запущен {time}."
 						  ],
 		   "party_created": ["`{party}` занесена в базу данных.",
