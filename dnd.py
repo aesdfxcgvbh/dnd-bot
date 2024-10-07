@@ -115,23 +115,20 @@ async def timed_status():
 		await log("status_changed", status = new_status)
 
 async def log(event, **kwargs):
-	"""Отправляет отчёт о вызове команд, смене статуса и включении бота в определённый дискорд-канал (log_channel) и в консоль. event — ключ из словаря reports, а **kwargs — аргументы для format()"""
+	"""Отправляет отчёт о вызове команд, смене статуса и включении бота в определённый дискорд-канал (log_channel) и в консоль. event — ключ из словаря reports, а **kwargs — аргументы для format(). "{0}" в строках из reports заменяется на "**" в дискорде."""
 	console_kwargs = kwargs.copy()
 	discord_kwargs = kwargs.copy()
-	print("-----------------------------------\nkwargs:", kwargs, "\n")
 	for key, value in console_kwargs.items():
+		
 		if isinstance(value, discord.Member):
 			console_kwargs[key] = value.global_name
-	print("console kwargs:", console_kwargs, "\n")
 	print(str("{0}[" + datetime.datetime.now().strftime('%H:%M:%S') + "]{0} " + reports[event].format('{1}', **console_kwargs)).format("", ""))
 	
 	if log_channel is not None:
-		print("kwargs (2):", kwargs, "\n")
 		
 		for key, value in discord_kwargs.items():
 			if isinstance(value, discord.Member) or isinstance(value, discord.Role):
 				discord_kwargs[key] = value.mention
-		print("discord_kwargs", discord_kwargs, "\n")
 				
 		channel = await bot.fetch_channel(log_channel)
 		await channel.send(str("{0}[" + datetime.datetime.now().strftime('%H:%M:%S') + "]{0} " + reports[event].format('{1}', **discord_kwargs)).format("`", "**"))
