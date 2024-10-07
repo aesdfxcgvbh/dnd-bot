@@ -84,7 +84,8 @@ reports = {"bot_online": "{0}{bot} был запущен.{0}",
 	   "invite": "{0}{action}{0}. Тип: {0}{type}{0}, отправитель: {sender}, получатель: {recipient}, группа: {0}{party}{0}.",
 	   "party_changed": "{0}{action}{0}. Участник: {member}, группа: {0}{party}{0}.",
 	   "party_removed": "Группа {0}{party}{0} удалена пользователем {owner}.",
-	   "status_changed": 'Статус изменён на "{status}"'
+	   "status_changed": 'Статус изменён на "{status}"',
+	   "user_left": "{member} вышел из группы {0}{party}{0}
 	  }
 responds = {"bot_online": ["{bot} был запущен {time}."
 						  ],
@@ -499,6 +500,7 @@ async def quit_party(
 	if is_party_member(ctx, ctx.author, party_name):
 		await kick_party_member(ctx.guild, ctx.author, party_name)
 		await ctx.respond("Сделано, вы вышли из данной группы.")
+		log("user_left", member = ctx.author, party = party_name)
 	else:
 		await ctx.respond("Вы не состоите в данной группе.")
 
