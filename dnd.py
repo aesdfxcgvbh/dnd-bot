@@ -445,6 +445,23 @@ async def list(
 			else:
 				await ctx.respond(f"Организатор: {await bot.get_or_fetch_user(int(dm))}.\nУчастники: отсутствуют.") 
 
+@bot.application_command(name = "покинуть_группу")
+async def quit_party(
+		ctx,
+		party_name: discord.Option(
+			str,
+			name = "название_группы",
+			description = "То уникальное название, что вы вводили при создании группы.",
+			autocomplete = discord.utils.basic_autocomplete(autocomplete_names),
+			required = True
+			)):
+	"""Функция самостоятельного выхода из группы."""
+	if is_party_member(ctx, ctx.author, party_name):
+		await kick_party_member(ctx.guild, ctx.author, party_name)
+		await ctx.respond("Сделано, вы вышли из данной группы.")
+	else:
+		await ctx.respond("Вы не состоите в данной группе.")
+
 @bot.event
 async def on_member_remove(member):
 	await kick_party_member(guild = member.guild, member = member)
