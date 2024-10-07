@@ -116,14 +116,12 @@ async def timed_status():
 
 async def log(event, **kwargs):
 	"""Отправляет отчёт о вызове команд, смене статуса и включении бота в определённый дискорд-канал (log_channel) и в консоль. event — ключ из словаря reports, а **kwargs — аргументы для format()"""
-	console_kwargs = {}
-	discord_kwargs = {}
+	console_kwargs = kwargs.copy()
+	discord_kwargs = kwargs.copy()
 	print("-----------------------------------\nkwargs:", kwargs, "\n")
 	for key, value in console_kwargs.items():
 		if isinstance(value, discord.Member):
 			console_kwargs[key] = value.global_name
-		else:
-			console_kwargs[key] = value
 	print("console kwargs:", console_kwargs, "\n")
 	print(str("{0}[" + datetime.datetime.now().strftime('%H:%M:%S') + "]{0} " + reports[event].format('{1}', **console_kwargs)).format("", ""))
 	
@@ -133,8 +131,6 @@ async def log(event, **kwargs):
 		for key, value in discord_kwargs.items():
 			if isinstance(value, discord.Member) or isinstance(value, discord.Role):
 				discord_kwargs[key] = value.mention
-			else:
-				discord_kwargs[key] = value
 		print("discord_kwargs", discord_kwargs, "\n")
 				
 		channel = await bot.fetch_channel(log_channel)
