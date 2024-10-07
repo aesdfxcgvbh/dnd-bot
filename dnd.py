@@ -502,7 +502,7 @@ async def quit_party(
 		await ctx.respond("Сделано, вы вышли из данной группы.")
 		await log("user_left", member = ctx.author, party = party_name)
 	else:
-		await ctx.respond("Вы не состоите в данной группе.")ф
+		await ctx.respond("Вы не состоите в данной группе.")
 
 @bot.event
 async def on_member_remove(member):
