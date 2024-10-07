@@ -29,6 +29,8 @@ activity = discord.Activity(type = discord.ActivityType.custom, state = "test st
 dm_role_id = 1283712029198254090
 server_id = 787280396915048498
 
+log_channel = 1129758742448185364    #Может быть None (смотреть log())
+
 ## Взаимодействие с SQL.
 
 connection = sqlite3.connect("parties.db")
@@ -77,7 +79,14 @@ statuses = ["Веди себя как заклинатель, колдунишк
 			"Я содомировал дракона!",
 			"Бум, критическое попадание!"
 			]
-reports = {"bot_online": ["{bot} был запущен {time}."
+reports = {"bot_online": "{0}{bot} был запущен.{0}",
+"party_created": "{0}Группа создана{0}. Название: {0}{party}{0}, категория: {0}{category}{0}, роль: {role}, организатор: {owner}.",
+"invite": "{0}{action}{0}. Тип: {0}{type}{0}, отправитель: {sender}, получатель: {recipient}, группа: {0}{party}{0}.",
+"party_changed": "{0}{action}{0}. Участник: {member}, группа: {0}{party}{0}.",
+"party_removed": "Группа {0}{party}{0} удалена пользователем {owner}.",
+"status_changed": 'Статус изменён на "{status}"'
+}
+responds = {"bot_online": ["{bot} был запущен {time}."
 						  ],
 		   "party_created": ["`{party}` занесена в базу данных.",
 							 "База данных обновлена.",
@@ -100,12 +109,34 @@ def random_answer(dict, key):
 async def timed_status():
 	"""Функция постоянной смены статуса."""
 	while True:
-		await bot.change_presence(activity = discord.Activity(type = discord.ActivityType.custom, state = random.choice(statuses)))
+		new_status = random.choice(statuses)
+		await bot.change_presence(activity = discord.Activity(type = discord.ActivityType.custom, state = new_status))
 		await asyncio.sleep(delay = 30)
+		await log("status_changed", status = new_status)
 
+async def log(event, **kwargs):
+	"""Отправляет отчёт о вызове команд, смене статуса и включении бота в определённый дискорд-канал (log_channel) и в консоль. event — ключ из словаря reports, а **kwargs — аргументы для format(). "{0}" в строках из reports заменяется на "**" в дискорде."""
+	console_kwargs = kwargs.copy()
+	discord_kwargs = kwargs.copy()
+	for key, value in console_kwargs.items():
+		
+		if isinstance(value, discord.Member):
+			console_kwargs[key] = value.global_name
+	print(str("{0}[" + datetime.datetime.now().strftime('%H:%M:%S') + "]{0} " + reports[event].format('{1}', **console_kwargs)).format("", ""))
+	
+	if log_channel is not None:
+		
+		for key, value in discord_kwargs.items():
+			if isinstance(value, discord.Member) or isinstance(value, discord.Role):
+				discord_kwargs[key] = value.mention
+				
+		channel = await bot.fetch_channel(log_channel)
+		await channel.send(str("{0}[" + datetime.datetime.now().strftime('%H:%M:%S') + "]{0} " + reports[event].format('{1}', **discord_kwargs)).format("`", "**"))
+    
 async def autocomplete_names(ctx):
 	"""Функция для autocomplete в командах, где необходим список групп. Функция не используется в других местах, чтобы не вызывать конфликты из-за неизвестной мне работы autocomplete."""
 	return [party[0] for party in cursor.execute(f"SELECT name FROM parties").fetchall()]
+	
 
 ## Функции проверки.
 
@@ -125,12 +156,13 @@ def is_party_member(ctx, member, party_name):
 
 async def change_dm(ctx, member, party_name):
 	"""Функция смены организатора группы. Использует функцию request() для подтвереждения согласия."""
-	await ctx.defer()
+	#await ctx.defer()
 	if await request(
 		ctx,
 		member = member,
 		party_name = party_name,
-		text = random_answer(dict = answers_invites, key = "dm")
+		text = random_answer(dict = answers_invites, key = "dm"),
+		type = "передача прав"
 		):
 		try:
 			cursor.execute(f"UPDATE parties SET dm_id = {member.id} WHERE name = '{party_name}'")
@@ -151,6 +183,7 @@ async def change_dm(ctx, member, party_name):
 		except Exception as err:
 			await ctx.respond(f"Не удалось заменить организатора группы {party_name} на {member}: `{err}`")
 			return False
+		await log("party_changed", action = "Произошла смена организатора", member = member, party = party_name)
 		return True
 
 async def invite_to_party(ctx, member, party_name):
@@ -159,7 +192,8 @@ async def invite_to_party(ctx, member, party_name):
 		ctx,
 		member = member,
 		party_name = party_name,
-		text = random_answer(dict = answers_invites, key = "member")
+		text = random_answer(dict = answers_invites, key = "member"),
+		type = "приглашение"
 		):
 		try:
 			current_members = cursor.execute(f"SELECT members FROM parties WHERE name = '{party_name}'").fetchone()[0]
@@ -171,6 +205,7 @@ async def invite_to_party(ctx, member, party_name):
 		except Exception as err:
 			await ctx.respond(f"Не удалось взаимодействовать с {member}: `{err}`")
 			return False
+		await log("party_changed", action = "Участник включён в группу", member = member, party = party_name)
 		return True
 
 class requestView(discord.ui.View):
@@ -196,7 +231,7 @@ class requestView(discord.ui.View):
 		self.value = False
 		self.stop()
 
-async def request(ctx, member, party_name, text):
+async def request(ctx, member, party_name, text, type):
 	"""Функция проверки согласия пользователя на то или иное действие."""
 	if ctx.author.id == member.id:
 		await ctx.respond("Вы не можете взаимодействовать сами с собой.")
@@ -222,11 +257,14 @@ async def request(ctx, member, party_name, text):
 				return False
 		await ctx.respond("Запрос отправлен.")
 		await dm.send(content = text.format(inviting = ctx.author.global_name, party = party_name), view = View)
+		await log("invite", action = "Запрос отправлен", type = type, sender = ctx.author, recipient = member, party = party_name)
 		await View.wait()
 		if View.value:
 			await ctx.respond(f"{member} принял запрос о взаимодействии с `{party_name}`")
+			await log("invite", action = "Запрос принят", type = type, sender = ctx.author, recipient = member, party = party_name)
 		else:
 			await ctx.respond(f"{member} отклонил запрос о взаимодействии с `{party_name}`")
+			await log("invite", action = "Запрос отклонён", type = type, sender = ctx.author, recipient = member, party = party_name)
 
 		# Этот фрагмент кода был продублирован для удаления приглашения из базы данных. Поскольку функция асинхронная, приходится удлинять код.
 		current_invites = cursor.execute(f"SELECT invites FROM parties WHERE name = '{party_name}'").fetchone()[0].split(', ')
@@ -259,7 +297,8 @@ async def kick_party_member(guild, member, party_name = None):
 				await member.remove_roles(guild.get_role(int(cursor.execute(f"SELECT role_id FROM parties WHERE name = '{party_name}'").fetchone()[0])))
 			except discord.errors.NotFound:
 				pass
-
+			
+			await log("party_changed", action = "Участник исключён", member = member, party = party_name)
 			return True
 		else:
 			return False
@@ -271,7 +310,8 @@ async def on_ready():
 	if not bot.auto_sync_commands: # Этот блок необходим для дебаггинга. ID гильдии ниже поменять на свой тестовый сервер, bot.auto_sync_commands переключить на False.
 		await bot.sync_commands(guild_ids = [server_id])
 	print(f"Подключённые команды: {', '.join(command.name for command in bot.commands)}.")
-	print(random_answer(dict = reports, key = "bot_online").format(bot = bot.user, time = datetime.datetime.now().strftime('%H:%M:%S')))
+	#print(random_answer(dict = responds, key = "bot_online").format(bot = bot.user, time = datetime.datetime.now().strftime('%H:%M:%S')))
+	await log("bot_online", bot = bot.user)
 	print(f"bot_status: {bot.status}")
 	# await bot.change_presence(activity = discord.Activity(type = discord.ActivityType.custom, state = f"Запуск произведён {datetime.datetime.now().strftime('%H:%M:%S')}")) # Этот блок тоже необходим для дебаггинга. Отключите timed_status() перед этим.
 
@@ -314,11 +354,10 @@ async def create_party(ctx,
 			target = ctx.guild.default_role,
 			view_channel = False
 			)
-
 		cursor.execute(f"INSERT INTO parties VALUES ('{party_name}', {category.id}, {role.id}, {ctx.author.id}, '', '')")
 		connection.commit()
-
-		await ctx.respond(f"{random_answer(dict = reports, key = 'party_created').format(party = party_name)} Создана категория `{category_name}`. Роль группы: <@&{role.id}>.")
+		await log("party_created", party = party_name, category = category_name, role = role, owner = ctx.author)
+		await ctx.respond(f"{random_answer(dict = responds, key = 'party_created').format(party = party_name)} Создана категория `{category_name}`. Роль группы: {role.mention}.")
 	else:
 		await ctx.respond("Это имя группы уже занято.")
 
@@ -328,7 +367,7 @@ async def create_party_error(ctx, error):
 	if type(error) is discord.errors.CheckFailure:
 		await ctx.respond("У вас недостаточно прав для создания группы.")
 	else:
-		await ctx.respond(random_answer(dict = reports, key = "unexpected_error").format(error = error))
+		await ctx.respond(random_answer(dict = responds, key = "unexpected_error").format(error = error))
 
 @bot.application_command(name = "распоряжаться_группой", description = "Приглашает или убирает участников, а также позволяет сменить владельца группы.")
 async def manage_party(
@@ -375,7 +414,7 @@ async def manage_party_error(ctx, error):
 	if type(error) is TypeError:
 		await ctx.respond("Такой группы не существует.")
 	else:
-		await ctx.respond(random_answer(dict = reports, key = "unexpected_error").format(error = error))
+		await ctx.respond(random_answer(dict = responds, key = "unexpected_error").format(error = error))
 
 @bot.application_command(name = "удалить_группу")
 async def delete_party(
@@ -404,6 +443,7 @@ async def delete_party(
 				pass
 			cursor.execute(f"DELETE FROM parties WHERE name = '{party_name}'")
 			connection.commit()
+			await log("party_removed", party = party_name, owner = ctx.author)
 
 			await ctx.respond(f"Группа `{party_name}` была удалена.")
 		else:
@@ -433,7 +473,7 @@ async def list(
 		await ctx.respond(f"Список активных групп: {', '.join([party[0] for party in cursor.execute(f'SELECT name FROM parties').fetchall()])}")
 	elif option == "информация о группе":
 		if party_name is None:
-			await ctx.respond(random_answer(dict = reports, key = "unexpected_error").format(error = "Хаха! Попался, педик! Я же говорил, что поле \"party_name\" обязательно для опции \"player-list\"!"))
+			await ctx.respond(random_answer(dict = responds, key = "unexpected_error").format(error = "Хаха! Попался, педик! Я же говорил, что поле \"party_name\" обязательно для опции \"player-list\"!"))
 		else:
 			dm = cursor.execute(f"SELECT dm_id FROM parties WHERE name = '{party_name}'").fetchone()[0]
 			members = cursor.execute(f"SELECT members FROM parties WHERE name = '{party_name}'").fetchone()[0].split(', ')
